@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext'
 import { formatPrice } from '../data/products'
 
 
+
 export default function Cart() {
   const { items, removeItem, updateQuantity, subtotal, clearCart } = useCart()
   const [checkoutStep, setCheckoutStep] = useState('cart')
@@ -19,8 +20,28 @@ export default function Cart() {
   })
   const [formError, setFormError] = useState('')
   const [confirmationData, setConfirmationData] = useState(null)
-  const shipping = subtotal >= 100 ? 0 : subtotal > 0 ? 9.99 : 0
-  const total = subtotal + shipping
+  //const shipping = subtotal >= 100 ? 0 : subtotal > 0 ? 9.99 : 0
+  //const total = subtotal + shipping
+
+  // Number of different products
+  const totalProducts = items.length;
+
+  // Total quantity of all products
+  const totalQuantity = items.reduce(
+    (sum, item) => sum + item.quantity,
+    0
+  );
+
+  // Shipping Rule
+  const shipping =
+    totalProducts >= 2 || totalQuantity >= 2
+      ? 0
+      : subtotal > 0
+        ? 99
+        : 0;
+
+  const total = subtotal + shipping;
+
   const showAddressStep = checkoutStep === 'address'
   const showConfirmationStep = checkoutStep === 'confirmation'
 
@@ -386,15 +407,48 @@ export default function Cart() {
                   <span>Subtotal</span>
                   <span>{formatPrice(subtotal)}</span>
                 </div>
+                
                 <div className="flex justify-between text-brand-700">
                   <span>Shipping</span>
-                  <span>{shipping === 0 ? 'Free' : formatPrice(shipping)}</span>
+
+                  {shipping === 0 ? (
+                    <span className="font-semibold text-green-600">
+                      FREE
+                    </span>
+                  ) : (
+                    <span>{formatPrice(shipping)}</span>
+                  )}
                 </div>
-                {subtotal > 0 && subtotal < 100 && (
-                  <p className="text-xs text-brand-500">
-                    Add {formatPrice(100 - subtotal)} more for free shipping
-                  </p>
-                )}
+                
+                {shipping === 0 ? (
+                <div className="mt-3 flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 p-4">
+                  <span className="text-2xl">🎉</span>
+
+                  <div>
+                    <p className="font-semibold text-green-700">
+                      Congratulations!
+                    </p>
+
+                    <p className="text-sm text-green-600">
+                      You've unlocked FREE Shipping on your order.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-3 flex items-center gap-3 rounded-xl border border-yellow-200 bg-yellow-50 p-4">
+                  <span className="text-2xl">🚚</span>
+
+                  <div>
+                    <p className="font-semibold text-yellow-700">
+                      Free Shipping Available
+                    </p>
+
+                    <p className="text-sm text-yellow-600">
+                      Add one more product or increase the quantity to enjoy FREE Shipping.
+                    </p>
+                  </div>
+                </div>
+              )}
                 <div className="border-t border-brand-200 pt-3">
                   <div className="flex justify-between text-base font-semibold text-brand-950">
                     <span>Total</span>
