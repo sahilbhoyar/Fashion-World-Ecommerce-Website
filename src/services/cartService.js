@@ -18,16 +18,18 @@ export const addCartItem = async (userId, item) => {
   await setDoc(cartRef, item);
 };
 
-// Get cart
+// Get Cart
 export const getCartItems = async (userId) => {
   const snapshot = await getDocs(
     collection(db, "users", userId, "cart")
   );
 
-  return snapshot.docs.map((doc) => doc.data());
+  return snapshot.docs
+    .map((doc) => doc.data())
+    .filter((item) => item.quantity > 0);
 };
 
-// Update quantity
+// Update Quantity
 export const updateCartItem = async (
   userId,
   productId,
@@ -37,15 +39,25 @@ export const updateCartItem = async (
 ) => {
   const cartItemId = `${productId}_${size}_${color}`;
 
-  await updateDoc(
-    doc(db, "users", userId, "cart", cartItemId),
-    {
-      quantity,
-    }
+  const cartRef = doc(
+    db,
+    "users",
+    userId,
+    "cart",
+    cartItemId
   );
+
+  if (quantity <= 0) {
+    await deleteDoc(cartRef);
+    return;
+  }
+
+  await updateDoc(cartRef, {
+    quantity,
+  });
 };
 
-// Remove item
+// Remove Item
 export const removeCartItem = async (
   userId,
   productId,

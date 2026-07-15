@@ -150,6 +150,30 @@ export function CartProvider({ children }) {
   color,
   quantity
 ) => {
+
+  if (quantity <= 0) {
+
+    dispatch({
+      type: "REMOVE_ITEM",
+      payload: { id, size, color },
+    });
+
+    if (user?.uid) {
+      try {
+        await removeCartItem(
+          user.uid,
+          id,
+          size,
+          color
+        );
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    return;
+  }
+
   dispatch({
     type: "UPDATE_QUANTITY",
     payload: { id, size, color, quantity },
@@ -165,12 +189,33 @@ export function CartProvider({ children }) {
         quantity
       );
     } catch (error) {
-      console.error("Error updating quantity:", error);
+      console.error(error);
     }
   }
 };
 
-  const clearCart = () => dispatch({ type: 'CLEAR_CART' })
+  const clearCart = async () => {
+
+  if (user?.uid) {
+
+    for (const item of state.items) {
+
+      await removeCartItem(
+        user.uid,
+        item.id,
+        item.size,
+        item.color
+      );
+
+    }
+
+  }
+
+  dispatch({
+    type: "CLEAR_CART",
+  });
+
+};
 
   const itemCount = state.items.length;
   const subtotal = state.items.reduce((sum, item) => sum + item.price * item.quantity, 0)

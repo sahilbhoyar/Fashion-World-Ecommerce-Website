@@ -109,12 +109,20 @@ export default function Cart() {
                   <div className="mt-auto flex items-center justify-between pt-4">
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() =>
-                          updateQuantity(item.id, item.size, item.color, item.quantity - 1)
-                        }
-                        className="flex h-8 w-8 items-center justify-center rounded border border-brand-300 text-brand-700 hover:bg-brand-50"
+                        onClick={() => {
+                          if (item.quantity === 1) {
+                            removeItem(item.id, item.size, item.color);
+                          } else {
+                            updateQuantity(
+                              item.id,
+                              item.size,
+                              item.color,
+                              item.quantity - 1
+                            );
+                          }
+                        }}
                       >
-                        &minus;
+                        -
                       </button>
                       <span className="w-6 text-center text-sm font-medium">{item.quantity}</span>
                       <button
