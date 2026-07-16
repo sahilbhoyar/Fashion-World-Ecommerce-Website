@@ -1,15 +1,28 @@
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
+import { useEffect } from "react";
 import { useCart } from '../context/CartContext'
 import { formatPrice } from '../data/products'
+import { useAddress } from "../context/AddressContext";
 
 
 
 export default function Cart() {
   const { items, removeItem, updateQuantity, subtotal, clearCart } = useCart()
   const [checkoutStep, setCheckoutStep] = useState('cart')
-  const [addresses, setAddresses] = useState([])
+  const {
+  addresses,
+  saveAddress,
+  removeAddress,
+  } = useAddress();
   const [selectedAddress, setSelectedAddress] = useState(null)
+
+  useEffect(() => {
+  if (addresses.length > 0 && !selectedAddress) {
+    setSelectedAddress(addresses[0].id);
+  }
+  }, [addresses, selectedAddress]);
+
   const [isCreatingAddress, setIsCreatingAddress] = useState(false)
   const [newAddress, setNewAddress] = useState({
     name: '',
@@ -22,6 +35,8 @@ export default function Cart() {
   const [confirmationData, setConfirmationData] = useState(null)
   //const shipping = subtotal >= 100 ? 0 : subtotal > 0 ? 9.99 : 0
   //const total = subtotal + shipping
+
+
 
   // Number of different products
   const totalProducts = items.length;
@@ -44,6 +59,7 @@ export default function Cart() {
 
   const showAddressStep = checkoutStep === 'address'
   const showConfirmationStep = checkoutStep === 'confirmation'
+
 
   if (items.length === 0) {
     return (
@@ -236,29 +252,45 @@ export default function Cart() {
                   <div className="flex flex-col gap-3 sm:flex-row">
                     <button
                       type="button"
-                      onClick={() => {
-                        if (!newAddress.name.trim() || !newAddress.phone.trim() || !newAddress.address.trim() || !newAddress.email.trim()) {
-                          setFormError('Please fill in all required fields.')
-                          return
+                      onClick={async () => {
+                        try {
+                          if (
+                            !newAddress.name.trim() ||
+                            !newAddress.phone.trim() ||
+                            !newAddress.address.trim() ||
+                            !newAddress.email.trim()
+                          ) {
+                            setFormError("Please fill all fields");
+                            return;
+                          }
+
+                          console.log("Saving address...");
+
+                          const savedAddress = await saveAddress({
+                            ...newAddress,
+                            paymentMethod: "Pay on Delivery",
+                          });
+
+                          console.log("Saved:", savedAddress);
+
+                          if (savedAddress) {
+                            setSelectedAddress(savedAddress.id);
+                          }
+
+                          setFormError("");
+                          setIsCreatingAddress(false);
+
+                          setNewAddress({
+                            name: "",
+                            email: "",
+                            type: "HOME",
+                            address: "",
+                            phone: "",
+                          });
+
+                        } catch (err) {
+                          console.error("SAVE ERROR:", err);
                         }
-                        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-                        if (!emailPattern.test(newAddress.email.trim())) {
-                          setFormError('Please enter a valid email address.')
-                          return
-                        }
-                        const nextId = addresses.length ? Math.max(...addresses.map((address) => address.id)) + 1 : 1
-                        const savedAddress = { id: nextId, ...newAddress, paymentMethod: 'Pay on Delivery' }
-                        setAddresses((current) => [...current, savedAddress])
-                        setSelectedAddress(savedAddress.id)
-                        setIsCreatingAddress(false)
-                        setFormError('')
-                        setNewAddress({
-                          name: '',
-                          email: '',
-                          type: 'HOME',
-                          address: '',
-                          phone: '',
-                        })
                       }}
                       className="w-full rounded-full bg-brand-950 py-3 text-sm font-semibold text-white transition hover:bg-brand-800 sm:w-auto"
                     >
@@ -302,6 +334,15 @@ export default function Cart() {
                             <p className="mt-4 text-sm text-brand-600">Mobile: {address.phone}</p>
                             <p className="mt-2 text-sm text-brand-600">Email: {address.email}</p>
                             <p className="mt-2 text-sm text-brand-600">Payment: Pay on Delivery</p>
+                            <button
+                              onClick={async (e) => {
+                                e.preventDefault();
+                                await removeAddress(address.id);
+                              }}
+                              className="mt-3 text-sm font-medium text-red-600 hover:text-red-700"
+                            >
+                              Delete Address
+                            </button>
                           </div>
                         </label>
                       ))}
@@ -398,7 +439,6 @@ export default function Cart() {
                 onClick={() => {
                   setCheckoutStep('cart')
                   setConfirmationData(null)
-                  setAddresses([])
                   setSelectedAddress(null)
                 }}
                 className="mt-6 w-full rounded-full bg-brand-950 py-3 text-sm font-semibold text-white transition hover:bg-brand-800"

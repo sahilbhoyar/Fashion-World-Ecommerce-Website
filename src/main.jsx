@@ -6,14 +6,17 @@ import { AuthProvider } from './context/AuthContext'
 import { CartProvider } from './context/CartContext'
 import './index.css'
 import "./firebase/firebase";
+import { AddressProvider } from "./context/AddressContext";
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <AuthProvider>
       <CartProvider>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
+        <AddressProvider>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </AddressProvider>
       </CartProvider>
     </AuthProvider>
   </React.StrictMode>

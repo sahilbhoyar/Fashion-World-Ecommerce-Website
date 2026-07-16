@@ -13,3 +13,23 @@
     text-wrap: balance;
   }
 }
+
+.announcement-track {
+  display: inline-flex;
+  min-width: 200%;
+  animation: marquee 22s linear infinite;
+}
+
+.announcement-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0%);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
