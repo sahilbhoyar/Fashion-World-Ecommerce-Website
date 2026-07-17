@@ -1,3 +1,6 @@
+import { addAddress } from "../firebase/addressService";
+import { useAuth } from "../context/AuthContext";
+
 import {
   collection,
   doc,
@@ -22,11 +25,19 @@ export const addAddress = async (userId, address) => {
 
   await setDoc(
     doc(db, "users", userId, "addresses", addressId),
-    newAddress
+    {
+      id: addressId,
+      ...address,
+      createdAt: new Date().toISOString(),
+    }
   );
 
-  return newAddress;
-};
+  return {
+    id: addressId,
+    ...address,
+    createdAt: new Date().toISOString(),
+  };
+  };
 
 // =========================
 // Get All Addresses
@@ -62,5 +73,5 @@ export const deleteAddress = async (
 ) => {
   await deleteDoc(
     doc(db, "users", userId, "addresses", addressId)
-  );
+);
 };

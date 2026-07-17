@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { useCart } from '../context/CartContext'
 import { formatPrice } from '../data/products'
 import { useAddress } from "../context/AddressContext";
+import AddressModal from "../components/address/AddressModal";
+import { useOrder } from "../context/OrderContext";
 
 
 
@@ -15,6 +17,9 @@ export default function Cart() {
   saveAddress,
   removeAddress,
   } = useAddress();
+
+  const { saveOrder } = useOrder();
+
   const [selectedAddress, setSelectedAddress] = useState(null)
 
   useEffect(() => {
@@ -25,12 +30,40 @@ export default function Cart() {
 
   const [isCreatingAddress, setIsCreatingAddress] = useState(false)
   const [newAddress, setNewAddress] = useState({
-    name: '',
-    email: '',
-    type: 'HOME',
-    address: '',
-    phone: '',
-  })
+    // Customer Details
+    name: "",
+    email: "",
+    countryCode: "+91",
+    phone: "",
+
+    // Address Details
+    flatHouse: "",
+    areaStreet: "",
+    landmark: "",
+    city: "",
+    state: "",
+    pincode: "",
+    country: "India",
+
+    // Complete Address (will be generated automatically later)
+    address: "",
+
+    // Address Type
+    type: "HOME",
+
+    // Default Address
+    isDefault: false,
+
+    // Payment
+    paymentMethod: "Cash on Delivery",
+
+    // Delivery Instructions
+    instructions: {
+      weekendSaturday: false,
+      weekendSunday: false,
+      note: "",
+    },
+  });
   const [formError, setFormError] = useState('')
   const [confirmationData, setConfirmationData] = useState(null)
   //const shipping = subtotal >= 100 ? 0 : subtotal > 0 ? 9.99 : 0
@@ -191,124 +224,7 @@ export default function Cart() {
                 </button>
               </div>
 
-              {isCreatingAddress ? (
-                <div className="mt-6 space-y-4 rounded-3xl border border-brand-200 bg-brand-50 p-6 shadow-sm">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <label className="block text-sm text-brand-700">
-                      Name
-                      <input
-                        value={newAddress.name}
-                        onChange={(e) => setNewAddress({ ...newAddress, name: e.target.value })}
-                        className="mt-2 w-full rounded-xl border border-brand-300 bg-white px-4 py-3 text-sm text-brand-950 outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600"
-                      />
-                    </label>
-                    <label className="block text-sm text-brand-700">
-                      Email
-                      <input
-                        type="email"
-                        value={newAddress.email}
-                        onChange={(e) => setNewAddress({ ...newAddress, email: e.target.value })}
-                        className="mt-2 w-full rounded-xl border border-brand-300 bg-white px-4 py-3 text-sm text-brand-950 outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600"
-                      />
-                    </label>
-                  </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <label className="block text-sm text-brand-700">
-                      Phone
-                      <input
-                        value={newAddress.phone}
-                        onChange={(e) => setNewAddress({ ...newAddress, phone: e.target.value })}
-                        className="mt-2 w-full rounded-xl border border-brand-300 bg-white px-4 py-3 text-sm text-brand-950 outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600"
-                      />
-                    </label>
-                    <label className="block text-sm text-brand-700">
-                      Address Label
-                      <select
-                        value={newAddress.type}
-                        onChange={(e) => setNewAddress({ ...newAddress, type: e.target.value })}
-                        className="mt-2 w-full rounded-xl border border-brand-300 bg-white px-4 py-3 text-sm text-brand-950 outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600"
-                      >
-                        <option>HOME</option>
-                        <option>WORK</option>
-                        <option>OTHER</option>
-                      </select>
-                    </label>
-                  </div>
-                  <label className="block text-sm text-brand-700">
-                    Address
-                    <textarea
-                      value={newAddress.address}
-                      onChange={(e) => setNewAddress({ ...newAddress, address: e.target.value })}
-                      rows={4}
-                      className="mt-2 w-full rounded-xl border border-brand-300 bg-white px-4 py-3 text-sm text-brand-950 outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600"
-                    />
-                  </label>
-                  <div className="rounded-2xl border border-brand-200 bg-white px-4 py-3 text-sm text-brand-700">
-                    Payment method: <strong>Pay on Delivery</strong>
-                  </div>
-
-                  {formError && <p className="text-sm text-red-600">{formError}</p>}
-
-                  <div className="flex flex-col gap-3 sm:flex-row">
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        try {
-                          if (
-                            !newAddress.name.trim() ||
-                            !newAddress.phone.trim() ||
-                            !newAddress.address.trim() ||
-                            !newAddress.email.trim()
-                          ) {
-                            setFormError("Please fill all fields");
-                            return;
-                          }
-
-                          console.log("Saving address...");
-
-                          const savedAddress = await saveAddress({
-                            ...newAddress,
-                            paymentMethod: "Pay on Delivery",
-                          });
-
-                          console.log("Saved:", savedAddress);
-
-                          if (savedAddress) {
-                            setSelectedAddress(savedAddress.id);
-                          }
-
-                          setFormError("");
-                          setIsCreatingAddress(false);
-
-                          setNewAddress({
-                            name: "",
-                            email: "",
-                            type: "HOME",
-                            address: "",
-                            phone: "",
-                          });
-
-                        } catch (err) {
-                          console.error("SAVE ERROR:", err);
-                        }
-                      }}
-                      className="w-full rounded-full bg-brand-950 py-3 text-sm font-semibold text-white transition hover:bg-brand-800 sm:w-auto"
-                    >
-                      Save Address
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsCreatingAddress(false)
-                        setFormError('')
-                      }}
-                      className="w-full rounded-full border border-brand-300 bg-white py-3 text-sm font-semibold text-brand-950 transition hover:bg-brand-50 sm:w-auto"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
+              {!isCreatingAddress && (
                 <div className="mt-6 space-y-4">
                   {addresses.length > 0 ? (
                     <div className="space-y-4">
@@ -369,12 +285,35 @@ export default function Cart() {
               )}
 
               <button
-                onClick={() => {
+                onClick={async () => {
                   const selected = addresses.find((address) => address.id === selectedAddress)
                   if (!selected) {
                     setFormError('Please add and select an address before continuing.')
                     return
                   }
+
+                  await saveOrder({
+                    customer: {
+                      name: selected.name,
+                      email: selected.email,
+                      phone: selected.phone,
+                      address: selected.address,
+                    },
+
+                    items: items,
+
+                    subtotal,
+
+                    shipping,
+
+                    total,
+
+                    paymentMethod: selected.paymentMethod,
+
+                    status: "Pending",
+                  });
+                  await clearCart();
+
                   setConfirmationData({
                     email: selected.email,
                     address: selected.address,
@@ -521,6 +460,273 @@ export default function Cart() {
           )}
         </div>
       </div>
+      <AddressModal
+      open={isCreatingAddress}
+      onClose={() => setIsCreatingAddress(false)}
+    >
+
+        <div className="mt-6 space-y-4 rounded-3xl border border-brand-200 bg-brand-50 p-6 shadow-sm">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <label className="block text-sm text-brand-700">
+                      Name
+                      <input
+                        value={newAddress.name}
+                        onChange={(e) =>
+                          setNewAddress({ ...newAddress, name: e.target.value })
+                        }
+                        className="mt-2 w-full rounded-xl border border-brand-300 bg-white px-4 py-3 text-sm text-brand-950 outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600"
+                      />
+                    </label>
+                    <label className="block text-sm text-brand-700">
+                      Email
+                      <input
+                        type="email"
+                        value={newAddress.email}
+                        onChange={(e) => setNewAddress({ ...newAddress, email: e.target.value })}
+                        className="mt-2 w-full rounded-xl border border-brand-300 bg-white px-4 py-3 text-sm text-brand-950 outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600"
+                      />
+                    </label>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <label className="block text-sm text-brand-700">
+                      Phone
+                      <input
+                        type="tel"
+                        maxLength={10}
+                        value={newAddress.phone}
+                        onChange={(e) =>
+                          setNewAddress({
+                            ...newAddress,
+                            phone: e.target.value.replace(/\D/g, ""),
+                          })
+                        }
+                        className="mt-2 w-full rounded-xl border border-brand-300 bg-white px-4 py-3 text-sm text-brand-950 outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600"
+                      />
+                    </label>
+                    <label className="block text-sm text-brand-700">
+                      Address Label
+                      <select
+                        value={newAddress.type}
+                        onChange={(e) => setNewAddress({ ...newAddress, type: e.target.value })}
+                        className="mt-2 w-full rounded-xl border border-brand-300 bg-white px-4 py-3 text-sm text-brand-950 outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600"
+                      >
+                        <option>HOME</option>
+                        <option>WORK</option>
+                        <option>OTHER</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div className="grid gap-4">
+
+                  <label className="block text-sm text-brand-700">
+                    Flat / House No.
+                    <input
+                      value={newAddress.flatHouse}
+                      onChange={(e) =>
+                        setNewAddress({
+                          ...newAddress,
+                          flatHouse: e.target.value,
+                        })
+                      }
+                      className="mt-2 w-full rounded-xl border border-brand-300 bg-white px-4 py-3"
+                    />
+                  </label>
+
+                  <label className="block text-sm text-brand-700">
+                    Area / Street
+                    <input
+                      value={newAddress.areaStreet}
+                      onChange={(e) =>
+                        setNewAddress({
+                          ...newAddress,
+                          areaStreet: e.target.value,
+                        })
+                      }
+                      className="mt-2 w-full rounded-xl border border-brand-300 bg-white px-4 py-3"
+                    />
+                  </label>
+
+                  <label className="block text-sm text-brand-700">
+                    Landmark
+                    <input
+                      value={newAddress.landmark}
+                      onChange={(e) =>
+                        setNewAddress({
+                          ...newAddress,
+                          landmark: e.target.value,
+                        })
+                      }
+                      className="mt-2 w-full rounded-xl border border-brand-300 bg-white px-4 py-3"
+                    />
+                  </label>
+
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+
+                <label className="block text-sm text-brand-700">
+                  Country
+                  <input
+                    value={newAddress.country}
+                    onChange={(e) =>
+                      setNewAddress({
+                        ...newAddress,
+                        country: e.target.value,
+                      })
+                    }
+                    className="mt-2 w-full rounded-xl border border-brand-300 bg-white px-4 py-3"
+                  />
+                </label>
+
+                <label className="block text-sm text-brand-700">
+                  State
+                  <input
+                    value={newAddress.state}
+                    onChange={(e) =>
+                      setNewAddress({
+                        ...newAddress,
+                        state: e.target.value,
+                      })
+                    }
+                    className="mt-2 w-full rounded-xl border border-brand-300 bg-white px-4 py-3"
+                  />
+                </label>
+
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2 mt-4">
+
+                <label className="block text-sm text-brand-700">
+                  City
+                  <input
+                    value={newAddress.city}
+                    onChange={(e) =>
+                      setNewAddress({
+                        ...newAddress,
+                        city: e.target.value,
+                      })
+                    }
+                    className="mt-2 w-full rounded-xl border border-brand-300 bg-white px-4 py-3"
+                  />
+                </label>
+
+                <label className="block text-sm text-brand-700">
+                  Pincode
+                  <input
+                    value={newAddress.pincode}
+                    onChange={(e) =>
+                      setNewAddress({
+                        ...newAddress,
+                        pincode: e.target.value,
+                      })
+                    }
+                    className="mt-2 w-full rounded-xl border border-brand-300 bg-white px-4 py-3"
+                  />
+                </label>
+
+              </div>
+                  <div className="rounded-2xl border border-brand-200 bg-white px-4 py-3 text-sm text-brand-700">
+                    Payment method: <strong>Pay on Delivery</strong>
+                  </div>
+
+                  {formError && <p className="text-sm text-red-600">{formError}</p>}
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                        if (
+                          !newAddress.name.trim() ||
+                          !newAddress.email.trim() ||
+                          !newAddress.phone.trim() ||
+                          !newAddress.flatHouse.trim() ||
+                          !newAddress.areaStreet.trim() ||
+                          !newAddress.city.trim() ||
+                          !newAddress.state.trim() ||
+                          !newAddress.pincode.trim()
+                        ) {
+                          setFormError("Please fill all required fields.");
+                          return;
+                        }
+
+                        setFormError("");
+
+                          console.log("Saving address...");
+
+                          const fullAddress = [
+                            newAddress.flatHouse,
+                            newAddress.areaStreet,
+                            newAddress.landmark,
+                            newAddress.city,
+                            newAddress.state,
+                            newAddress.pincode,
+                            newAddress.country,
+                          ]
+                            .filter(Boolean)
+                            .join(", ");
+
+                          const savedAddress = await saveAddress({
+                            ...newAddress,
+                            address: fullAddress,
+                            paymentMethod: "Pay on Delivery",
+                          });
+
+                          if (savedAddress) {
+                            setSelectedAddress(savedAddress.id);
+                          }
+
+                          setFormError("");
+
+                          setTimeout(() => {
+                              setIsCreatingAddress(false);
+                          }, 100);
+
+                          setNewAddress({
+                          name:"",
+                          email:"",
+                          countryCode:"+91",
+                          phone:"",
+                          address:"",
+                          country:"India",
+                          state:"",
+                          city:"",
+                          pincode:"",
+                          flatHouse:"",
+                          areaStreet:"",
+                          landmark:"",
+                          type:"HOME",
+                          isDefault:false,
+                          paymentMethod:"Cash on Delivery",
+                          instructions:{
+                              weekendSaturday:false,
+                              weekendSunday:false,
+                              note:"",
+                          }
+                      })
+
+                        } catch (err) {
+                          console.error("SAVE ERROR:", err);
+                        }
+                      }}
+                      className="w-full rounded-full bg-brand-950 py-3 text-sm font-semibold text-white transition hover:bg-brand-800 sm:w-auto"
+                    >
+                      Save Address
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCreatingAddress(false)
+                        setFormError('')
+                      }}
+                      className="w-full rounded-full border border-brand-300 bg-white py-3 text-sm font-semibold text-brand-950 transition hover:bg-brand-50 sm:w-auto"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+      
+
+    </AddressModal>
     </div>
   )
 }

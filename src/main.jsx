@@ -7,6 +7,7 @@ import { CartProvider } from './context/CartContext'
 import './index.css'
 import "./firebase/firebase";
 import { AddressProvider } from "./context/AddressContext";
+import { OrderProvider } from "./context/OrderContext";
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -14,7 +15,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <CartProvider>
         <AddressProvider>
           <BrowserRouter>
+           <OrderProvider>
             <App />
+           </OrderProvider>
           </BrowserRouter>
         </AddressProvider>
       </CartProvider>

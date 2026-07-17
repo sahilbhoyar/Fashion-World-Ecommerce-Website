@@ -85,20 +85,29 @@ export function AddressProvider({ children }) {
 
   // Add Address
   const saveAddress = async (address) => {
-    if (!user?.uid) return null;
+  if (!user?.uid) {
+    console.log("User not logged in");
+    return null;
+  }
 
-    await addAddress(user.uid, address);
+  console.log("User UID:", user.uid);
+  console.log("Address received:", address);
 
-    const updatedAddresses = await getAddresses(user.uid);
+  await addAddress(user.uid, address);
 
-    dispatch({
-      type: "LOAD_ADDRESSES",
-      payload: updatedAddresses,
-    });
+  console.log("Address added to Firestore");
 
-    return updatedAddresses[updatedAddresses.length - 1];
-  };
+  const updatedAddresses = await getAddresses(user.uid);
 
+  console.log("Updated Addresses:", updatedAddresses);
+
+  dispatch({
+    type: "LOAD_ADDRESSES",
+    payload: updatedAddresses,
+  });
+
+  return updatedAddresses[updatedAddresses.length - 1];
+};
 
   // Update Address
   const editAddress = async (addressId, updatedData) => {
