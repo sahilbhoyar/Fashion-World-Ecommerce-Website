@@ -1,5 +1,5 @@
-import { addAddress } from "../firebase/addressService";
-import { useAuth } from "../context/AuthContext";
+import { addAddress } from "../../services/addressService";
+import { useAuth } from "../../context/AuthContext";
 
 
 const handleDeliverAddress = async () => {

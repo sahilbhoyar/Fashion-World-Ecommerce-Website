@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useCart } from '../context/CartContext'
 import { formatPrice } from '../data/products'
 import { useAddress } from "../context/AddressContext";
-import AddressModal from "../components/address/AddressModal";
+import AddressModal from "../components/Address/AddressModal";
 import { useOrder } from "../context/OrderContext";
 
 
@@ -65,6 +65,7 @@ export default function Cart() {
     },
   });
   const [formError, setFormError] = useState('')
+  const [errors, setErrors] = useState({});
   const [confirmationData, setConfirmationData] = useState(null)
   //const shipping = subtotal >= 100 ? 0 : subtotal > 0 ? 9.99 : 0
   //const total = subtotal + shipping
@@ -246,10 +247,34 @@ export default function Cart() {
                                 {address.type}
                               </span>
                             </div>
-                            <p className="mt-3 text-sm leading-6 text-brand-700">{address.address}</p>
-                            <p className="mt-4 text-sm text-brand-600">Mobile: {address.phone}</p>
+                            <div className="mt-3 space-y-1 text-sm leading-6 text-brand-700">
+
+                              {address.flatHouse && (
+                                <p>{address.flatHouse}</p>
+                              )}
+
+                              {address.areaStreet && (
+                                <p>{address.areaStreet}</p>
+                              )}
+
+                              {address.landmark && (
+                                <p>Landmark: {address.landmark}</p>
+                              )}
+
+                              <p>
+                                {address.city}, {address.state} - {address.pincode}
+                              </p>
+
+                              <p>{address.country}</p>
+
+                            </div>
+                            <p className="mt-4 text-sm text-brand-600">
+                            Mobile: {address.countryCode} {address.phone}
+                          </p>
                             <p className="mt-2 text-sm text-brand-600">Email: {address.email}</p>
-                            <p className="mt-2 text-sm text-brand-600">Payment: Pay on Delivery</p>
+                            <p className="mt-2 text-sm text-brand-600">
+                              Payment: {address.paymentMethod}
+                            </p>
                             <button
                               onClick={async (e) => {
                                 e.preventDefault();
@@ -468,40 +493,106 @@ export default function Cart() {
         <div className="mt-6 space-y-4 rounded-3xl border border-brand-200 bg-brand-50 p-6 shadow-sm">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <label className="block text-sm text-brand-700">
-                      Name
+                      Name <span className="text-red-500">*</span>
                       <input
                         value={newAddress.name}
-                        onChange={(e) =>
-                          setNewAddress({ ...newAddress, name: e.target.value })
-                        }
-                        className="mt-2 w-full rounded-xl border border-brand-300 bg-white px-4 py-3 text-sm text-brand-950 outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600"
+                        onChange={(e) => {
+
+                          const value = e.target.value;
+
+                          if (/^[A-Za-z ]*$/.test(value)) {
+
+                            setNewAddress({
+                              ...newAddress,
+                              name: value,
+                            });
+
+                            setErrors((prev) => ({
+                              ...prev,
+                              name: "",
+                            }));
+
+                          }
+
+                        }}
+                        className={`mt-2 w-full rounded-xl border bg-white px-4 py-3 text-sm text-brand-950 outline-none focus:ring-1 ${
+                          errors.name
+                            ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                            : "border-brand-300 focus:border-brand-600 focus:ring-brand-600"
+                        }`}
                       />
+                      {errors.name && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {errors.name}
+                        </p>
+                      )}
                     </label>
                     <label className="block text-sm text-brand-700">
-                      Email
+                      Email <span className="text-red-500">*</span>
                       <input
                         type="email"
                         value={newAddress.email}
-                        onChange={(e) => setNewAddress({ ...newAddress, email: e.target.value })}
-                        className="mt-2 w-full rounded-xl border border-brand-300 bg-white px-4 py-3 text-sm text-brand-950 outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600"
+                        onChange={(e) => {
+                          setNewAddress({
+                            ...newAddress,
+                            email: e.target.value,
+                          });
+
+                          setErrors((prev) => ({
+                            ...prev,
+                            email: "",
+                          }));
+                        }}
+                        className={`mt-2 w-full rounded-xl border bg-white px-4 py-3 text-sm text-brand-950 outline-none focus:ring-1 ${
+                          errors.email
+                            ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                            : "border-brand-300 focus:border-brand-600 focus:ring-brand-600"
+                        }`}
                       />
+                      {errors.email && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {errors.email}
+                        </p>
+                      )}
                     </label>
                   </div>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <label className="block text-sm text-brand-700">
-                      Phone
+                      Phone <span className="text-red-500">*</span>
                       <input
                         type="tel"
                         maxLength={10}
                         value={newAddress.phone}
-                        onChange={(e) =>
-                          setNewAddress({
-                            ...newAddress,
-                            phone: e.target.value.replace(/\D/g, ""),
-                          })
-                        }
-                        className="mt-2 w-full rounded-xl border border-brand-300 bg-white px-4 py-3 text-sm text-brand-950 outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600"
+                        onChange={(e) => {
+
+                          const value = e.target.value;
+
+                          if (/^\d{0,10}$/.test(value)) {
+
+                            setNewAddress({
+                              ...newAddress,
+                              phone: value,
+                            });
+
+                            setErrors((prev) => ({
+                              ...prev,
+                              phone: "",
+                            }));
+
+                          }
+
+                        }}
+                        className={`mt-2 w-full rounded-xl border bg-white px-4 py-3 text-sm text-brand-950 outline-none focus:ring-1 ${
+                          errors.phone
+                            ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                            : "border-brand-300 focus:border-brand-600 focus:ring-brand-600"
+                        }`}
                       />
+                      {errors.phone && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {errors.phone}
+                        </p>
+                      )}
                     </label>
                     <label className="block text-sm text-brand-700">
                       Address Label
@@ -519,7 +610,7 @@ export default function Cart() {
                   <div className="grid gap-4">
 
                   <label className="block text-sm text-brand-700">
-                    Flat / House No.
+                    Flat / House No. <span className="text-red-500">*</span>
                     <input
                       value={newAddress.flatHouse}
                       onChange={(e) =>
@@ -528,12 +619,21 @@ export default function Cart() {
                           flatHouse: e.target.value,
                         })
                       }
-                      className="mt-2 w-full rounded-xl border border-brand-300 bg-white px-4 py-3"
+                      className={`mt-2 w-full rounded-xl border bg-white px-4 py-3 text-sm text-brand-950 outline-none focus:ring-1 ${
+                        errors.flatHouse
+                          ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                          : "border-brand-300 focus:border-brand-600 focus:ring-brand-600"
+                      }`}
                     />
+                    {errors.flatHouse && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.flatHouse}
+                      </p>
+                    )}
                   </label>
 
                   <label className="block text-sm text-brand-700">
-                    Area / Street
+                    Area / Street <span className="text-red-500">*</span>
                     <input
                       value={newAddress.areaStreet}
                       onChange={(e) =>
@@ -542,8 +642,17 @@ export default function Cart() {
                           areaStreet: e.target.value,
                         })
                       }
-                      className="mt-2 w-full rounded-xl border border-brand-300 bg-white px-4 py-3"
+                      className={`mt-2 w-full rounded-xl border bg-white px-4 py-3 text-sm text-brand-950 outline-none focus:ring-1 ${
+                        errors.areaStreet
+                          ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                          : "border-brand-300 focus:border-brand-600 focus:ring-brand-600"
+                      }`}
                     />
+                    {errors.areaStreet && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.areaStreet}
+                      </p>
+                    )}
                   </label>
 
                   <label className="block text-sm text-brand-700">
@@ -564,8 +673,8 @@ export default function Cart() {
                 <div className="grid gap-4 sm:grid-cols-2">
 
                 <label className="block text-sm text-brand-700">
-                  Country
-                  <input
+                  Country <span className="text-red-500">*</span>
+                  <select
                     value={newAddress.country}
                     onChange={(e) =>
                       setNewAddress({
@@ -573,13 +682,25 @@ export default function Cart() {
                         country: e.target.value,
                       })
                     }
-                    className="mt-2 w-full rounded-xl border border-brand-300 bg-white px-4 py-3"
-                  />
+                    className={`mt-2 w-full rounded-xl border bg-white px-4 py-3 text-sm text-brand-950 outline-none focus:ring-1 ${
+                        errors.country
+                          ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                          : "border-brand-300 focus:border-brand-600 focus:ring-brand-600"
+                      }`}
+                  >
+                    <option value="India">India</option>
+                  </select>
+                  {errors.country && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.country}
+                  </p>
+                )}
                 </label>
+                
 
                 <label className="block text-sm text-brand-700">
-                  State
-                  <input
+                  State <span className="text-red-500">*</span>
+                  <select
                     value={newAddress.state}
                     onChange={(e) =>
                       setNewAddress({
@@ -587,8 +708,40 @@ export default function Cart() {
                         state: e.target.value,
                       })
                     }
-                    className="mt-2 w-full rounded-xl border border-brand-300 bg-white px-4 py-3"
-                  />
+                    className={`mt-2 w-full rounded-xl border bg-white px-4 py-3 text-sm text-brand-950 outline-none focus:ring-1 ${
+                        errors.state
+                          ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                          : "border-brand-300 focus:border-brand-600 focus:ring-brand-600"
+                      }`}
+                  >
+                    <option value="">Select State</option>
+
+                    <option>Maharashtra</option>
+                    <option>Delhi</option>
+                    <option>Gujarat</option>
+                    <option>Karnataka</option>
+                    <option>Tamil Nadu</option>
+                    <option>Madhya Pradesh</option>
+                    <option>Rajasthan</option>
+                    <option>Uttar Pradesh</option>
+                    <option>Bihar</option>
+                    <option>Punjab</option>
+                    <option>Haryana</option>
+                    <option>West Bengal</option>
+                    <option>Kerala</option>
+                    <option>Odisha</option>
+                    <option>Telangana</option>
+                    <option>Andhra Pradesh</option>
+                    <option>Assam</option>
+                    <option>Jharkhand</option>
+                    <option>Chhattisgarh</option>
+                    <option>Goa</option>
+                  </select>
+                  {errors.state && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.state}
+                    </p>
+                  )}
                 </label>
 
               </div>
@@ -596,7 +749,7 @@ export default function Cart() {
               <div className="grid gap-4 sm:grid-cols-2 mt-4">
 
                 <label className="block text-sm text-brand-700">
-                  City
+                  City <span className="text-red-500">*</span>
                   <input
                     value={newAddress.city}
                     onChange={(e) =>
@@ -605,22 +758,53 @@ export default function Cart() {
                         city: e.target.value,
                       })
                     }
-                    className="mt-2 w-full rounded-xl border border-brand-300 bg-white px-4 py-3"
+                    className={`mt-2 w-full rounded-xl border bg-white px-4 py-3 text-sm text-brand-950 outline-none focus:ring-1 ${
+                        errors.city
+                          ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                          : "border-brand-300 focus:border-brand-600 focus:ring-brand-600"
+                      }`}
                   />
+                  {errors.city && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.city}
+                    </p>
+                  )}
                 </label>
 
                 <label className="block text-sm text-brand-700">
-                  Pincode
+                  Pincode <span className="text-red-500">*</span>
                   <input
                     value={newAddress.pincode}
-                    onChange={(e) =>
-                      setNewAddress({
-                        ...newAddress,
-                        pincode: e.target.value,
-                      })
-                    }
-                    className="mt-2 w-full rounded-xl border border-brand-300 bg-white px-4 py-3"
+                    onChange={(e) => {
+
+                      const value = e.target.value;
+
+                      if (/^\d{0,6}$/.test(value)) {
+
+                        setNewAddress({
+                          ...newAddress,
+                          pincode: value,
+                        });
+
+                        setErrors((prev) => ({
+                          ...prev,
+                          pincode: "",
+                        }));
+
+                      }
+
+                    }}
+                    className={`mt-2 w-full rounded-xl border bg-white px-4 py-3 text-sm text-brand-950 outline-none focus:ring-1 ${
+                        errors.pincode
+                          ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                          : "border-brand-300 focus:border-brand-600 focus:ring-brand-600"
+                      }`}
                   />
+                  {errors.pincode && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.pincode}
+                    </p>
+                  )}
                 </label>
 
               </div>
@@ -635,22 +819,62 @@ export default function Cart() {
                       type="button"
                       onClick={async () => {
                         try {
-                        if (
-                          !newAddress.name.trim() ||
-                          !newAddress.email.trim() ||
-                          !newAddress.phone.trim() ||
-                          !newAddress.flatHouse.trim() ||
-                          !newAddress.areaStreet.trim() ||
-                          !newAddress.city.trim() ||
-                          !newAddress.state.trim() ||
-                          !newAddress.pincode.trim()
+                        const validationErrors = {};
+                        if (!newAddress.name.trim()) {
+                          validationErrors.name = "Name is required";
+                        } else if (!/^[A-Za-z ]+$/.test(newAddress.name.trim())) {
+                          validationErrors.name = "Name should contain only letters";
+                        }
+
+                        if (!newAddress.email.trim()) {
+                          validationErrors.email = "Email is required";
+                        } else if (
+                          !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(
+                            newAddress.email
+                          )
                         ) {
-                          setFormError("Please fill all required fields.");
+                          validationErrors.email = "Enter a valid email address";
+                        }
+
+                        if (!newAddress.phone.trim()) {
+                          validationErrors.phone = "Phone number is required";
+                        } else if (!/^\d{10}$/.test(newAddress.phone)) {
+                          validationErrors.phone = "Phone number must be exactly 10 digits";
+                        }
+
+                        if (!newAddress.flatHouse.trim()) {
+                          validationErrors.flatHouse = "Flat / House No. is required";
+                        }
+
+                        if (!newAddress.areaStreet.trim()) {
+                          validationErrors.areaStreet = "Area / Street is required";
+                        }
+
+                        if (!newAddress.country.trim()) {
+                          validationErrors.country = "Country is required";
+                        }
+
+                        if (!newAddress.state.trim()) {
+                          validationErrors.state = "State is required";
+                        }
+
+                        if (!newAddress.city.trim()) {
+                          validationErrors.city = "City is required";
+                        }
+
+                        if (!newAddress.pincode.trim()) {
+                          validationErrors.pincode = "Pincode is required";
+                        } else if (!/^\d{6}$/.test(newAddress.pincode)) {
+                          validationErrors.pincode = "Pincode must be exactly 6 digits";
+                        }
+
+                        if (Object.keys(validationErrors).length > 0) {
+                          setErrors(validationErrors);
                           return;
                         }
 
                         setFormError("");
-
+                        setErrors({});
                           console.log("Saving address...");
 
                           const fullAddress = [
