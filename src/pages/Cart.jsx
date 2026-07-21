@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom'
+import { sendOrderNotification } from "../services/emailService";
 import { useState } from 'react'
 import { useEffect } from "react";
 import { useCart } from '../context/CartContext'
 import { formatPrice } from '../data/products'
 import { useAddress } from "../context/AddressContext";
 import AddressModal from "../components/Address/AddressModal";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 import { useOrder } from "../context/OrderContext";
-
 
 
 export default function Cart() {
@@ -33,7 +35,6 @@ export default function Cart() {
     // Customer Details
     name: "",
     email: "",
-    countryCode: "+91",
     phone: "",
 
     // Address Details
@@ -269,7 +270,7 @@ export default function Cart() {
 
                             </div>
                             <p className="mt-4 text-sm text-brand-600">
-                            Mobile: {address.countryCode} {address.phone}
+                            Mobile: {address.phone}
                           </p>
                             <p className="mt-2 text-sm text-brand-600">Email: {address.email}</p>
                             <p className="mt-2 text-sm text-brand-600">
@@ -325,7 +326,7 @@ export default function Cart() {
                       address: selected.address,
                     },
 
-                    items: items,
+                    items,
 
                     subtotal,
 
@@ -336,6 +337,37 @@ export default function Cart() {
                     paymentMethod: selected.paymentMethod,
 
                     status: "Pending",
+                  });
+
+                  await sendOrderNotification({
+                    customer_name: selected.name,
+
+                    customer_email: selected.email,
+
+                    customer_phone: selected.phone,
+
+                    customer_address: selected.address,
+
+                    subtotal: subtotal,
+
+                    shipping: shipping,
+
+                    total: total,
+
+                    payment_method: selected.paymentMethod,
+
+                    order_date: new Date().toLocaleString(),
+
+                    order_items: items
+                      .map(
+                        (item) =>
+                          `${item.name}
+                  Size: ${item.size}
+                  Color: ${item.color}
+                  Qty: ${item.quantity}
+                  Price: ₹${item.price * item.quantity}`
+                      )
+                      .join("\n\n"),
                   });
                   await clearCart();
 
@@ -559,34 +591,28 @@ export default function Cart() {
                   <div className="grid gap-4 sm:grid-cols-2">
                     <label className="block text-sm text-brand-700">
                       Phone <span className="text-red-500">*</span>
-                      <input
-                        type="tel"
-                        maxLength={10}
+                      <PhoneInput
+                        country={"in"}
                         value={newAddress.phone}
-                        onChange={(e) => {
-
-                          const value = e.target.value;
-
-                          if (/^\d{0,10}$/.test(value)) {
-
-                            setNewAddress({
-                              ...newAddress,
-                              phone: value,
-                            });
-
-                            setErrors((prev) => ({
-                              ...prev,
-                              phone: "",
-                            }));
-
-                          }
-
+                        onChange={(value) => {
+                          setNewAddress({
+                            ...newAddress,
+                            phone: "+" + value,
+                          });
                         }}
-                        className={`mt-2 w-full rounded-xl border bg-white px-4 py-3 text-sm text-brand-950 outline-none focus:ring-1 ${
-                          errors.phone
-                            ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                            : "border-brand-300 focus:border-brand-600 focus:ring-brand-600"
-                        }`}
+                        inputStyle={{
+                          width: "100%",
+                          height: "48px",
+                          borderRadius: "12px",
+                          border: "1px solid #D1D5DB",
+                        }}
+                        buttonStyle={{
+                          border: "none",
+                          background: "#fff",
+                        }}
+                        containerStyle={{
+                          marginTop: "8px",
+                        }}
                       />
                       {errors.phone && (
                         <p className="mt-1 text-sm text-red-600">
@@ -838,8 +864,14 @@ export default function Cart() {
 
                         if (!newAddress.phone.trim()) {
                           validationErrors.phone = "Phone number is required";
-                        } else if (!/^\d{10}$/.test(newAddress.phone)) {
-                          validationErrors.phone = "Phone number must be exactly 10 digits";
+                        } else {
+                          const phoneDigits = newAddress.phone.replace(/\D/g, "");
+
+                          const nationalNumber = phoneDigits.slice(-10);
+
+                          if (nationalNumber.length !== 10) {
+                            validationErrors.phone = "Phone number must be exactly 10 digits";
+                          }
                         }
 
                         if (!newAddress.flatHouse.trim()) {
@@ -908,7 +940,6 @@ export default function Cart() {
                           setNewAddress({
                           name:"",
                           email:"",
-                          countryCode:"+91",
                           phone:"",
                           address:"",
                           country:"India",
