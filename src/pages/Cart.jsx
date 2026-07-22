@@ -68,6 +68,19 @@ export default function Cart() {
   const [formError, setFormError] = useState('')
   const [errors, setErrors] = useState({});
   const [confirmationData, setConfirmationData] = useState(null)
+  const [selectedItemKeys, setSelectedItemKeys] = useState([])
+
+  const getItemKey = (item) => `${item.id}-${item.size}-${item.color}`
+
+  useEffect(() => {
+    setSelectedItemKeys((prev) => {
+      const currentKeys = items.map(getItemKey)
+      if (currentKeys.length === 0) return []
+
+      const validPrev = prev.filter((key) => currentKeys.includes(key))
+      return validPrev
+    })
+  }, [items])
   //const shipping = subtotal >= 100 ? 0 : subtotal > 0 ? 9.99 : 0
   //const total = subtotal + shipping
 
@@ -82,15 +95,39 @@ export default function Cart() {
     0
   );
 
+  const selectedItems = items.filter((item) => selectedItemKeys.includes(getItemKey(item)))
+
+  const selectedProducts = selectedItems.length
+  const selectedQuantity = selectedItems.reduce((sum, item) => sum + item.quantity, 0)
+  const selectedSubtotal = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+
   // Shipping Rule
   const shipping =
-    totalProducts >= 2 || totalQuantity >= 2
+    selectedProducts >= 2 || selectedQuantity >= 2
       ? 0
-      : subtotal > 0
+      : selectedSubtotal > 0
         ? 99
         : 0;
 
-  const total = subtotal + shipping;
+  const total = selectedSubtotal + shipping;
+
+  const allSelected = items.length > 0 && selectedItems.length === items.length
+  const hasSelectedItems = selectedItems.length > 0
+
+  const toggleItemSelection = (item) => {
+    const key = getItemKey(item)
+    setSelectedItemKeys((prev) =>
+      prev.includes(key) ? prev.filter((itemKey) => itemKey !== key) : [...prev, key]
+    )
+  }
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedItemKeys([])
+    } else {
+      setSelectedItemKeys(items.map(getItemKey))
+    }
+  }
 
   const showAddressStep = checkoutStep === 'address'
   const showConfirmationStep = checkoutStep === 'confirmation'
@@ -133,12 +170,34 @@ export default function Cart() {
 
       <div className="mt-10 grid gap-10 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <div className="divide-y divide-brand-200 rounded-2xl bg-white ring-1 ring-brand-200">
+          <div className="rounded-2xl border border-brand-200 bg-white p-4 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-200 pb-4">
+              <label className="flex items-center gap-3 text-sm font-medium text-brand-800">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={toggleSelectAll}
+                  className="h-4 w-4 rounded border-brand-300 text-brand-950 focus:ring-brand-950"
+                />
+                {allSelected ? 'Deselect all' : 'Select all'}
+              </label>
+              <span className="text-sm text-brand-600">
+                {hasSelectedItems ? `${selectedItems.length} selected` : 'No items selected'}
+              </span>
+            </div>
+
+            <div className="mt-4 divide-y divide-brand-200">
             {items.map((item) => (
               <div
                 key={`${item.id}-${item.size}-${item.color}`}
-                className="flex gap-4 p-4 sm:gap-6 sm:p-6"
+                className="flex gap-4 py-4 sm:gap-6"
               >
+                <input
+                  type="checkbox"
+                  checked={selectedItemKeys.includes(getItemKey(item))}
+                  onChange={() => toggleItemSelection(item)}
+                  className="mt-6 h-4 w-4 shrink-0 rounded border-brand-300 text-brand-950 focus:ring-brand-950"
+                />
                 <img
                   src={item.image}
                   alt={item.name}
@@ -195,6 +254,7 @@ export default function Cart() {
                 </div>
               </div>
             ))}
+            </div>
           </div>
 
           <button
@@ -318,6 +378,11 @@ export default function Cart() {
                     return
                   }
 
+                  if (!hasSelectedItems) {
+                    setFormError('Please select at least one item before continuing.')
+                    return
+                  }
+
                   await saveOrder({
                     customer: {
                       name: selected.name,
@@ -326,9 +391,9 @@ export default function Cart() {
                       address: selected.address,
                     },
 
-                    items,
+                    items: selectedItems,
 
-                    subtotal,
+                    subtotal: selectedSubtotal,
 
                     shipping,
 
@@ -337,6 +402,9 @@ export default function Cart() {
                     paymentMethod: selected.paymentMethod,
 
                     status: "Pending",
+                    trackingSteps: ["Placed", "Packed", "In transit", "Out for delivery"],
+                    trackingStatus: "Pending",
+                    orderDate: new Date().toISOString(),
                   });
 
                   await sendOrderNotification({
@@ -348,7 +416,7 @@ export default function Cart() {
 
                     customer_address: selected.address,
 
-                    subtotal: subtotal,
+                    subtotal: selectedSubtotal,
 
                     shipping: shipping,
 
@@ -358,7 +426,7 @@ export default function Cart() {
 
                     order_date: new Date().toLocaleString(),
 
-                    order_items: items
+                    order_items: selectedItems
                       .map(
                         (item) =>
                           `${item.name}
@@ -369,7 +437,10 @@ export default function Cart() {
                       )
                       .join("\n\n"),
                   });
-                  await clearCart();
+
+                  for (const item of selectedItems) {
+                    await removeItem(item.id, item.size, item.color)
+                  }
 
                   setConfirmationData({
                     email: selected.email,
@@ -378,7 +449,7 @@ export default function Cart() {
                     phone: selected.phone,
                     paymentMethod: selected.paymentMethod,
                     total: formatPrice(total),
-                    items: items.map((item) => ({
+                    items: selectedItems.map((item) => ({
                       name: item.name,
                       quantity: item.quantity,
                       price: formatPrice(item.price * item.quantity),
@@ -386,7 +457,7 @@ export default function Cart() {
                   })
                   setCheckoutStep('confirmation')
                 }}
-                disabled={!selectedAddress}
+                disabled={!selectedAddress || !hasSelectedItems}
                 className="mt-6 w-full rounded-full bg-brand-950 py-3 text-sm font-semibold text-white transition hover:bg-brand-800 disabled:cursor-not-allowed disabled:bg-brand-200"
               >
                 Deliver to this address
@@ -449,7 +520,7 @@ export default function Cart() {
               <div className="mt-6 space-y-3 text-sm">
                 <div className="flex justify-between text-brand-700">
                   <span>Subtotal</span>
-                  <span>{formatPrice(subtotal)}</span>
+                  <span>{formatPrice(selectedSubtotal)}</span>
                 </div>
                 
                 <div className="flex justify-between text-brand-700">
@@ -503,9 +574,10 @@ export default function Cart() {
 
               <button
                 onClick={() => setCheckoutStep('address')}
-                className="mt-6 w-full rounded-full bg-brand-950 py-3 text-sm font-semibold text-white transition hover:bg-brand-800"
+                disabled={!hasSelectedItems}
+                className="mt-6 w-full rounded-full bg-brand-950 py-3 text-sm font-semibold text-white transition hover:bg-brand-800 disabled:cursor-not-allowed disabled:bg-brand-200"
               >
-                Proceed to Checkout
+                {hasSelectedItems ? 'Proceed to Checkout' : 'Select items to continue'}
               </button>
               <Link
                 to="/shop"

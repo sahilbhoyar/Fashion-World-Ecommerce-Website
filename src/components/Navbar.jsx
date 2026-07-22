@@ -31,6 +31,9 @@ export default function Navbar() {
           <NavLink to="/shop?category=Women" className={linkClass}>
             Women
           </NavLink>
+          <NavLink to="/orders" className={linkClass}>
+            Orders
+          </NavLink>
         </div>
 
         <div className="flex items-center gap-3">

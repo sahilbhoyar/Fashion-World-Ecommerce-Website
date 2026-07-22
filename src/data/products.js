@@ -2,7 +2,8 @@ export const products = [
   {
     id: 1,
     name: 'Classic Linen Shirt',
-    price: 49.99,
+    price: 4999,
+    offerPrice: 3999,
     category: 'Men',
     image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&h=800&fit=crop',
     description: 'Breathable linen shirt with a relaxed fit. Perfect for warm days and casual outings.',
@@ -26,7 +27,8 @@ export const products = [
   {
     id: 3,
     name: 'Floral Midi Dress',
-    price: 79.99,
+    price: 7999,
+    offerPrice: 6499,
     category: 'Women',
     image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&h=800&fit=crop',
     description: 'Elegant floral midi dress with a flattering A-line cut. Ideal for brunch or evening events.',
@@ -62,7 +64,8 @@ export const products = [
   {
     id: 6,
     name: 'High-Waist Wide Leg Pants',
-    price: 69.99,
+    price: 6999,
+    offerPrice: 5499,
     category: 'Women',
     image: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=600&h=800&fit=crop',
     description: 'Chic high-waist pants with a flowing wide leg. Comfortable and effortlessly stylish.',
@@ -86,7 +89,8 @@ export const products = [
   {
     id: 8,
     name: 'Silk Wrap Blouse',
-    price: 94.99,
+    price: 9499,
+    offerPrice: 7999,
     category: 'Women',
     image: 'https://images.unsplash.com/photo-1564257631407-4deb1f99d992?w=600&h=800&fit=crop',
     description: 'Flowing silk wrap blouse with delicate draping. A statement piece for any occasion.',
@@ -100,4 +104,18 @@ export const products = [
 export const categories = ['All', 'Men', 'Women']
 
 export const formatPrice = (price) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price)
+  new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(price)
+
+export const getProductPriceDisplay = (product) => {
+  const hasOffer = typeof product.offerPrice === 'number' && product.offerPrice < product.price
+
+  return {
+    displayPrice: hasOffer ? product.offerPrice : product.price,
+    originalPrice: product.price,
+    hasOffer,
+  }
+}

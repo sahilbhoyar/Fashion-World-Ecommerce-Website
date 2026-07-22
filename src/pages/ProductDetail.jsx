@@ -1,19 +1,27 @@
 import { useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { products, formatPrice } from '../data/products'
+import { products, formatPrice, getProductPriceDisplay } from '../data/products'
 import { useCart } from '../context/CartContext'
 
 export default function ProductDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { addItem } = useCart()
+  const { addItem, items } = useCart()
 
   const product = products.find((p) => p.id === Number(id))
 
   const [selectedSize, setSelectedSize] = useState('')
   const [selectedColor, setSelectedColor] = useState('')
   const [quantity, setQuantity] = useState(1)
-  const [added, setAdded] = useState(false)
+
+  const variantInCart =
+    Boolean(selectedSize && selectedColor) &&
+    items.some(
+      (item) =>
+        item.id === product.id &&
+        item.size === selectedSize &&
+        item.color === selectedColor
+    )
 
   if (!product) {
     return (
@@ -27,10 +35,13 @@ export default function ProductDetail() {
   }
 
   const handleAddToCart = () => {
+    if (variantInCart) {
+      navigate('/cart')
+      return
+    }
+
     if (!selectedSize || !selectedColor) return
     addItem(product, selectedSize, selectedColor, quantity)
-    setAdded(true)
-    setTimeout(() => setAdded(false), 2000)
   }
 
   const related = products
@@ -61,9 +72,21 @@ export default function ProductDetail() {
           <h1 className="mt-2 font-display text-3xl font-semibold text-brand-950">
             {product.name}
           </h1>
-          <p className="mt-4 text-2xl font-semibold text-brand-800">
-            {formatPrice(product.price)}
-          </p>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <p className="text-2xl font-semibold text-brand-800">
+              {formatPrice(getProductPriceDisplay(product).displayPrice)}
+            </p>
+            {getProductPriceDisplay(product).hasOffer && (
+              <>
+                <span className="text-base text-brand-500 line-through">
+                  {formatPrice(getProductPriceDisplay(product).originalPrice)}
+                </span>
+                <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-green-700">
+                  Offer
+                </span>
+              </>
+            )}
+          </div>
           <p className="mt-6 leading-relaxed text-brand-700">{product.description}</p>
 
           {/* Size */}
@@ -127,23 +150,13 @@ export default function ProductDetail() {
           </div>
 
           {/* Actions */}
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-8">
             <button
               onClick={handleAddToCart}
               disabled={!selectedSize || !selectedColor}
-              className="flex-1 rounded-full bg-brand-950 px-8 py-3 text-sm font-semibold text-white transition hover:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-full bg-brand-950 px-8 py-3 text-sm font-semibold text-white transition hover:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {added ? 'Added to Cart!' : 'Add to Cart'}
-            </button>
-            <button
-              onClick={() => {
-                handleAddToCart()
-                navigate('/cart')
-              }}
-              disabled={!selectedSize || !selectedColor}
-              className="flex-1 rounded-full border border-brand-950 px-8 py-3 text-sm font-semibold text-brand-950 transition hover:bg-brand-100 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Buy Now
+              {variantInCart ? 'Go to Cart' : 'Add to Cart'}
             </button>
           </div>
 
@@ -171,7 +184,16 @@ export default function ProductDetail() {
                 />
                 <div className="p-4">
                   <h3 className="font-medium text-brand-950">{p.name}</h3>
-                  <p className="mt-1 text-sm font-semibold text-brand-700">{formatPrice(p.price)}</p>
+                  <div className="mt-1 flex items-center gap-2">
+                    <p className="text-sm font-semibold text-brand-700">
+                      {formatPrice(getProductPriceDisplay(p).displayPrice)}
+                    </p>
+                    {getProductPriceDisplay(p).hasOffer && (
+                      <span className="text-xs text-brand-500 line-through">
+                        {formatPrice(getProductPriceDisplay(p).originalPrice)}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </Link>
             ))}

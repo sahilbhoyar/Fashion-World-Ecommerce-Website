@@ -11,6 +11,7 @@ import {
   logoutUser,
   subscribeToAuth,
   loginWithGoogle,
+  resetPassword as resetPasswordEmail,
 } from "../services/authService";
 
 const AuthContext = createContext();
@@ -98,6 +99,11 @@ export function AuthProvider({ children }) {
   setShowLoginModal(false);
 };
 
+  // Forgot Password
+  const resetPassword = async (email) => {
+    return resetPasswordEmail(email);
+  };
+
   // Open Modal
   const openLoginModal = (redirect = "/") => {
 
@@ -134,6 +140,7 @@ export function AuthProvider({ children }) {
   login,
   signup,
   logout,
+  resetPassword,
   googleLogin,
   showLoginModal,
   openLoginModal,

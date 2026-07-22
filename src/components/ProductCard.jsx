@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { formatPrice } from '../data/products'
+import { formatPrice, getProductPriceDisplay } from '../data/products'
 
 export default function ProductCard({ product }) {
   return (
@@ -28,7 +28,21 @@ export default function ProductCard({ product }) {
         <h3 className="mt-1 font-medium text-brand-950 group-hover:text-brand-700">
           {product.name}
         </h3>
-        <p className="mt-2 text-sm font-semibold text-brand-800">{formatPrice(product.price)}</p>
+        <div className="mt-2 flex items-center gap-2">
+          <p className="text-sm font-semibold text-brand-800">
+            {formatPrice(getProductPriceDisplay(product).displayPrice)}
+          </p>
+          {getProductPriceDisplay(product).hasOffer && (
+            <>
+              <span className="text-xs text-brand-500 line-through">
+                {formatPrice(getProductPriceDisplay(product).originalPrice)}
+              </span>
+              <span className="rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-green-700">
+                Offer
+              </span>
+            </>
+          )}
+        </div>
       </div>
     </Link>
   )

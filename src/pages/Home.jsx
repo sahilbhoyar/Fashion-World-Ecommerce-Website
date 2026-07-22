@@ -139,7 +139,7 @@ export default function Home() {
       {/* Banner */}
       <section className="bg-brand-800 py-16 text-white">
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-          <h2 className="font-display text-3xl font-semibold">Free Shipping on Orders Over $100</h2>
+          <h2 className="font-display text-3xl font-semibold">Free Shipping on Orders Over ₹1000</h2>
           <p className="mx-auto mt-4 max-w-lg text-brand-200">
             Join Fashion World today and enjoy complimentary shipping on qualifying orders.
             Quality fashion, delivered to your door.

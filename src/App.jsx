@@ -6,6 +6,7 @@ import Home from './pages/Home'
 import Shop from './pages/Shop'
 import ProductDetail from './pages/ProductDetail'
 import Cart from './pages/Cart'
+import Orders from './pages/Orders'
 import AnnouncementBar from "./components/AnnouncementBar";
 
 export default function App() {
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="/shop" element={<Shop />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/orders" element={<Orders />} />
         </Routes>
       </main>
 
