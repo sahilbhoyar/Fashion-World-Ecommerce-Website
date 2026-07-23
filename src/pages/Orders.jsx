@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { formatPrice } from '../data/products'
 import { db } from '../firebase/firebase'
 import { collection, onSnapshot, orderBy, query } from 'firebase/firestore'
+import { completePastOrders } from '../services/orderService'
 
 export default function Orders() {
   const { user } = useAuth()
@@ -20,11 +21,16 @@ export default function Orders() {
     const ordersRef = collection(db, 'users', user.uid, 'orders')
     const q = query(ordersRef, orderBy('createdAt', 'desc'))
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
       const nextOrders = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }))
+
+      if (user?.uid) {
+        await completePastOrders(user.uid, nextOrders)
+      }
+
       setOrders(nextOrders)
       setLoading(false)
     })
@@ -36,18 +42,22 @@ export default function Orders() {
     const normalized = (status || 'Pending').toLowerCase()
 
     if (normalized.includes('delivered')) {
-      return ['Placed', 'Packed', 'Shipped', 'Delivered']
+      return ['Placed', 'Packed', 'Shipped', 'Out for delivery', 'Delivered']
+    }
+
+    if (normalized.includes('out for delivery')) {
+      return ['Placed', 'Packed', 'Shipped', 'Out for delivery', 'Delivered']
     }
 
     if (normalized.includes('shipped')) {
-      return ['Placed', 'Packed', 'Shipped', 'Out for delivery']
+      return ['Placed', 'Packed', 'Shipped', 'Out for delivery', 'Delivered']
     }
 
     if (normalized.includes('packed')) {
-      return ['Placed', 'Packed', 'In transit', 'Out for delivery']
+      return ['Placed', 'Packed', 'Shipped', 'Out for delivery', 'Delivered']
     }
 
-    return ['Placed', 'Packed', 'In transit', 'Out for delivery']
+    return ['Placed', 'Packed', 'Shipped', 'Out for delivery', 'Delivered']
   }
 
   const formatOrderDate = (value) => {
@@ -101,7 +111,8 @@ export default function Orders() {
         <div className="mt-8 space-y-6">
           {orders.map((order) => {
             const steps = getTrackingSteps(order.status)
-            const currentStep = steps.indexOf(order.status) >= 0 ? steps.indexOf(order.status) : 1
+            const currentStep = steps.findIndex((step) => step.toLowerCase() === (order.status || 'Pending').toLowerCase())
+            const safeCurrentStep = currentStep >= 0 ? currentStep : 1
 
             return (
               <div key={order.id} className="rounded-3xl border border-brand-200 bg-white p-6 shadow-sm">
@@ -142,7 +153,7 @@ export default function Orders() {
                       </div>
                       <div className="mt-4 space-y-3">
                         {steps.map((step, index) => {
-                          const isActive = index <= currentStep
+                          const isActive = index <= safeCurrentStep
                           return (
                             <div key={step} className="flex items-center gap-3">
                               <div className={`h-3 w-3 rounded-full ${isActive ? 'bg-brand-950' : 'bg-brand-300'}`} />

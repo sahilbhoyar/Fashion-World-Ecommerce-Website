@@ -7,6 +7,7 @@ import Shop from './pages/Shop'
 import ProductDetail from './pages/ProductDetail'
 import Cart from './pages/Cart'
 import Orders from './pages/Orders'
+import OrderStatusUpdate from './pages/OrderStatusUpdate'
 import AnnouncementBar from "./components/AnnouncementBar";
 
 export default function App() {
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/orders" element={<Orders />} />
+          <Route path="/order-status-update" element={<OrderStatusUpdate />} />
         </Routes>
       </main>
 

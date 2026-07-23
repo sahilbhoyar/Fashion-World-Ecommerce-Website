@@ -21,3 +21,14 @@ export const sendOrderNotification = async (orderData) => {
     throw error;
   }
 };
+
+export const createOrderStatusActionLinks = (userId, orderId) => {
+  const baseUrl = `${window.location.origin}/order-status-update`;
+
+  return {
+    packed: `${baseUrl}?userId=${encodeURIComponent(userId)}&orderId=${encodeURIComponent(orderId)}&status=Packed`,
+    shipped: `${baseUrl}?userId=${encodeURIComponent(userId)}&orderId=${encodeURIComponent(orderId)}&status=Shipped`,
+    outForDelivery: `${baseUrl}?userId=${encodeURIComponent(userId)}&orderId=${encodeURIComponent(orderId)}&status=Out for delivery`,
+    delivered: `${baseUrl}?userId=${encodeURIComponent(userId)}&orderId=${encodeURIComponent(orderId)}&status=Delivered`,
+  };
+};

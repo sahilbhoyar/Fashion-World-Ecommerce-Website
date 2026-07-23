@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { sendOrderNotification } from "../services/emailService";
+import { createOrderStatusActionLinks, sendOrderNotification } from "../services/emailService";
 import { useState } from 'react'
 import { useEffect } from "react";
 import { useCart } from '../context/CartContext'
@@ -9,7 +9,7 @@ import AddressModal from "../components/Address/AddressModal";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { useOrder } from "../context/OrderContext";
-
+import { useAuth } from "../context/AuthContext";
 
 export default function Cart() {
   const { items, removeItem, updateQuantity, subtotal, clearCart } = useCart()
@@ -21,6 +21,7 @@ export default function Cart() {
   } = useAddress();
 
   const { saveOrder } = useOrder();
+  const { user } = useAuth();
 
   const [selectedAddress, setSelectedAddress] = useState(null)
 
@@ -383,7 +384,7 @@ export default function Cart() {
                     return
                   }
 
-                  await saveOrder({
+                  const orderId = await saveOrder({
                     customer: {
                       name: selected.name,
                       email: selected.email,
@@ -406,6 +407,8 @@ export default function Cart() {
                     trackingStatus: "Pending",
                     orderDate: new Date().toISOString(),
                   });
+
+                  const statusLinks = createOrderStatusActionLinks(user?.uid || "", orderId);
 
                   await sendOrderNotification({
                     customer_name: selected.name,
@@ -436,6 +439,11 @@ export default function Cart() {
                   Price: ₹${item.price * item.quantity}`
                       )
                       .join("\n\n"),
+
+                    action_packed: statusLinks.packed,
+                    action_shipped: statusLinks.shipped,
+                    action_out_for_delivery: statusLinks.outForDelivery,
+                    action_delivered: statusLinks.delivered,
                   });
 
                   for (const item of selectedItems) {

@@ -1,6 +1,6 @@
 import { createContext, useContext, useReducer } from "react";
 import { useAuth } from "./AuthContext";
-import { addOrder, getOrders } from "../services/orderService";
+import { addOrder, completePastOrders, getOrders } from "../services/orderService";
 
 const OrderContext = createContext(null);
 
@@ -25,16 +25,22 @@ export function OrderProvider({ children }) {
   });
 
   const saveOrder = async (order) => {
-    if (!user?.uid) return;
+    if (!user?.uid) return null;
 
-    await addOrder(user.uid, order);
+    const orderId = await addOrder(user.uid, order);
 
     const orders = await getOrders(user.uid);
 
+    await completePastOrders(user.uid, orders);
+
+    const refreshedOrders = await getOrders(user.uid);
+
     dispatch({
       type: "LOAD_ORDERS",
-      payload: orders,
+      payload: refreshedOrders,
     });
+
+    return orderId;
   };
 
   return (
